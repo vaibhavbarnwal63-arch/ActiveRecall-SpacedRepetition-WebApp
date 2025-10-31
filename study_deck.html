@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Deck - {{chapter_name}}{% endblock %}
+
+{% block head_extra %}
+    <style>
+        /* Keeping most of the original study_deck styles here as they are highly specific */
+        body {
+            /* These are inherited from base.html, but can be overridden if needed */
+            /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+            /* background-color: #f5f5f5; */
+        }
+        .main-container {
+            max-width: 800px; /* Specific max-width for study deck */
+            padding: 20px; /* Specific padding */
+        }
+
+        .study-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .study-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            cursor: pointer; /* Indicate it's clickable */
+            position: relative;
+            padding-right: 30px; /* Space for the arrow */
+        }
+
+        .question-text::after {
+            content: '▼'; /* Down arrow */
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.3s ease;
+        }
+
+        .question-text.expanded::after {
+            content: '▲'; /* Up arrow when expanded */
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .answer-text {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 3px solid #28a745;
+            display: none; /* Hidden by default */
+        }
+
+        .rating-section {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .rating-label {
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .rating-btn {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .rating-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .rating-btn.selected {
+            color: white;
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .rating-btn[data-grade="1"] { border-color: #dc3545; }
+        .rating-btn[data-grade="1"].selected { background: #dc3545; border-color: #dc3545; }
+
+        .rating-btn[data-grade="2"] { border-color: #fd7e14; }
+        .rating-btn[data-grade="2"].selected { background: #fd7e14; border-color: #fd7e14; }
+
+        .rating-btn[data-grade="3"] { border-color: #ffc107; }
+        .rating-btn[data-grade="3"].selected { background: #ffc107; border-color: #ffc107; color: #333; }
+
+        .rating-btn[data-grade="4"] { border-color: #20c997; }
+        .rating-btn[data-grade="4"].selected { background: #20c997; border-color: #20c997; }
+
+        .rating-btn[data-grade="5"] { border-color: #28a745; }
+        .rating-btn[data-grade="5"].selected { background: #28a745; border-color: #28a745; }
+
+        .submit-section {
+            position: sticky;
+            bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 30px;
+            z-index: 100; /* Ensure it stays above other content */
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .question-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .status-new {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-review {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-overdue {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .no-questions-message {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 50px;
+            color: #555;
+            font-size: 1.1em;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="study-header">
+        <h1>Study Deck - {{chapter_name}}</h1>
+        <div class="study-stats">
+            <div class="stat-item">
+                <div style="font-size: 24px; font-weight: bold;">{{ stats.due_today }}</div>
+                <div>Due Today</div>
+            </div>
+            <div class="stat-item">
+                <div style="font-size: 24px; font-weight: bold;">{{ stats.new_questions }}</div>
+                <div>New Questions</div>
+            </div>
+            <div class="stat-item">
+                <div style="font-size: 24px; font-weight: bold;">{{ stats.completion_rate }}%</div>
+                <div>Completion</div>
+            </div>
+        </div>
+    </div>
+
+    {% if questions %}
+    <form id="studyForm" method="POST" action="/submit_study_deck/{{ chapter_id }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% for question in questions %}
+        <div class="question-card" data-question-id="{{ question.id }}">
+            <div class="question-number">
+                Question {{ loop.index }} of {{ questions|length }}
+                {% if question.is_new %}
+                    <span class="question-status status-new">NEW</span>
+                {% elif question.days_until_review < 0 %}
+                    <span class="question-status status-overdue">OVERDUE</span>
+                {% else %}
+                    <span class="question-status status-review">REVIEW</span>
+                {% endif %}
+            </div>
+
+            <div class="question-text">{{ question.Question }}</div>
+
+            <div class="answer-text">
+                <strong>Answer:</strong> {{ question.Answer }}
+            </div>
+
+            <div class="rating-section">
+                <div class="rating-label">How well did you recall this answer?</div>
+                <div class="rating-buttons">
+                    <button type="button" class="rating-btn" data-grade="1" data-question="{{ question.id }}">
+                        1<br><small>Failed</small>
+                    </button>
+                    <button type="button" class="rating-btn" data-grade="2" data-question="{{ question.id }}">
+                        2<br><small>Hard</small>
+                    </button>
+                    <button type="button" class="rating-btn" data-grade="3" data-question="{{ question.id }}">
+                        3<br><small>Good</small>
+                    </button>
+                    <button type="button" class="rating-btn" data-grade="4" data-question="{{ question.id }}">
+                        4<br><small>Easy</small>
+                    </button>
+                    <button type="button" class="rating-btn" data-grade="5" data-question="{{ question.id }}">
+                        5<br><small>Perfect</small>
+                    </button>
+                </div>
+                <input type="hidden" name="question_{{ question.id }}" id="rating_{{ question.id }}" required>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="submit-section">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div id="progressText">Rate all questions to continue (0/{{ questions|length }})</div>
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                Complete Study Session
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div class="no-questions-message">
+        <p>🎉 Great job! There are no questions due for review in this chapter at the moment.</p>
+        <p>Check back later, or explore other chapters to continue learning!</p>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const totalQuestions = {{ questions|length }};
+        if (totalQuestions === 0) {
+            return;
+        }
+
+        const questionTexts = document.querySelectorAll('.question-text');
+        const ratingButtons = document.querySelectorAll('.rating-btn');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        let ratedQuestions = new Set();
+
+        // Toggle answer visibility when question text is clicked
+        questionTexts.forEach(questionText => {
+            questionText.addEventListener('click', function() {
+                const answerText = this.nextElementSibling; // The answer-text div is the next sibling
+                answerText.style.display = answerText.style.display === 'block' ? 'none' : 'block';
+                this.classList.toggle('expanded'); // Toggle class for arrow rotation
+            });
+        });
+
+        // Handle rating button clicks
+        ratingButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const questionId = this.dataset.question;
+                const grade = this.dataset.grade;
+
+                // Remove selected class from other buttons for this question
+                document.querySelectorAll(`[data-question="${questionId}"]`).forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+
+                // Add selected class to clicked button
+                this.classList.add('selected');
+
+                // Update hidden input
+                document.getElementById(`rating_${questionId}`).value = grade;
+
+                // Track progress
+                ratedQuestions.add(questionId);
+                updateProgress();
+            });
+        });
+
+        function updateProgress() {
+            const completed = ratedQuestions.size;
+            const percentage = (completed / totalQuestions) * 100;
+
+            progressFill.style.width = percentage + '%';
+            progressText.textContent = completed === totalQuestions
+                ? 'All questions rated! Ready to submit.'
+                : `Rate all questions to continue (${completed}/${totalQuestions})`;
+
+            submitBtn.disabled = completed !== totalQuestions;
+        }
+
+        // Handle form submission
+        document.getElementById('studyForm').addEventListener('submit', function(e) {
+            if (ratedQuestions.size !== totalQuestions) {
+                e.preventDefault();
+                // Instead of alert(), rely on Flask flash messages or a custom modal
+                // For now, keeping as is, but this should be handled by a flash message from the server
+                // or a custom client-side modal if needed.
+                // alert('Please rate all questions before submitting.');
+                return;
+            }
+
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+        });
+    });
+</script>
+{% endblock %}

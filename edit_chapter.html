@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Chapter{% endblock %}
+
+{% block content %}
+    <div class="form-panel">
+        <div class="form-header">
+            <h1><i class="fas fa-edit"></i> Edit Chapter</h1>
+        </div>
+        <div class="form-body">
+            <form method="POST" action="{{ url_for('edit_chapter', id = id) }}">
+                {{ form.csrf_token }}
+                <div class="mb-4">
+                    {{ form.chapter.label(class="form-label") }}
+                    {{ form.chapter(class="form-control form-control-lg", placeholder="e.g., Quantum Mechanics") }}
+                </div>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn-modern btn-primary-modern btn-lg">
+                        <i class="fas fa-save me-2"></i> Update Chapter
+                    </button>
+                    <button type="button" onclick="history.back()" class="btn-modern btn-secondary-modern btn-lg">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

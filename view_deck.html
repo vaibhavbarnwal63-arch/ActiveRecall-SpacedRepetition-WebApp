@@ -1,0 +1,505 @@
+{% extends 'base.html' %}
+
+{% block title %}View Deck - {{ chapter.Chapters }}{% endblock %}
+
+{% block head_extra %}
+    <style>
+        .chapter-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chapter-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .chapter-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chapter-header p {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge-count {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .navigation-section {
+            margin-bottom: 3rem;
+        }
+
+        .questions-container {
+            position: relative;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .question-card:hover::before {
+            opacity: 1;
+        }
+
+        .question-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.9) 100%);
+            border-bottom: 1px solid rgba(222, 226, 230, 0.5);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .question-header:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .question-text {
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+            flex-grow: 1;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        .answer-content {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.98);
+            color: #4a5568;
+            border-top: 1px solid rgba(222, 226, 230, 0.3);
+            line-height: 1.6;
+        }
+
+        .answer-content strong {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .collapse-indicator {
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .collapsed .collapse-indicator {
+            transform: rotate(-90deg);
+            background: rgba(160, 160, 160, 0.1);
+            color: #a0a0a0;
+        }
+
+        .question-header:hover .collapse-indicator {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .btn-group-actions {
+            flex-shrink: 0;
+            margin-left: auto;
+            margin-right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .btn-edit-action {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+
+        .btn-edit-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+            color: white;
+        }
+
+        .btn-delete-action {
+            background: var(--danger-gradient);
+            color: white;
+        }
+
+        .btn-delete-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253, 121, 168, 0.4);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .empty-state-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            background: var(--warning-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+        }
+
+        .empty-state h4 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.75rem;
+        }
+
+        .empty-state p {
+            color: #718096;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Stagger animation for question cards */
+        .question-card {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        .question-card:nth-child(1) { animation-delay: 0.1s; }
+        .question-card:nth-child(2) { animation-delay: 0.2s; }
+        .question-card:nth-child(3) { animation-delay: 0.3s; }
+        .question-card:nth-child(4) { animation-delay: 0.4s; }
+        .question-card:nth-child(5) { animation-delay: 0.5s; }
+        .question-card:nth-child(n+6) { animation-delay: 0.6s; }
+
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chapter-header {
+                padding: 2rem 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .chapter-header h1 {
+                font-size: 2rem;
+            }
+
+            .main-container {
+                padding: 1rem 0;
+            }
+
+            .question-header {
+                padding: 1rem;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .question-text {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+
+            .btn-group-actions {
+                margin-left: 0;
+                margin-right: 0;
+                justify-content: space-between;
+            }
+
+            .navigation-section .d-flex {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .btn-modern {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .empty-state {
+                padding: 3rem 1rem;
+            }
+
+            .empty-state-icon {
+                font-size: 4rem;
+            }
+        }
+
+        /* Add loading animation */
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Chapter Header -->
+    <div class="chapter-header">
+        <h1><i class="fas fa-book-open me-2"></i>{{ chapter.Chapters }}</h1>
+        {% if subject %}
+            <p class="mb-3"><i class="fas fa-folder me-1"></i>{{ subject.Subs }}</p>
+        {% endif %}
+        <div class="mt-3">
+            <span class="badge-count">
+                <i class="fas fa-question-circle me-1"></i>
+                {{ questions|length }} Questions
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="row navigation-section">
+        <div class="col-12">
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{{ url_for('add_question', chapter_id=chapter.id) }}" class="btn-modern btn-success-modern pulse-animation">
+                    <i class="fas fa-plus-circle"></i>
+                    Add Question
+                </a>
+                <a href="{{ url_for('study_deck', chapter_id=chapter.id) }}" class="btn-modern btn-primary-modern">
+                    <i class="fas fa-brain"></i>
+                    Study Deck
+                </a>
+                <button onclick="history.back()" class="btn-modern btn-secondary-modern">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions and Answers -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 questions-container">
+            {% if questions %}
+                {% for question in questions %}
+                <div class="question-card">
+                    <!-- Question Header (Clickable) -->
+                    <div class="question-header collapsed" data-bs-toggle="collapse" data-bs-target="#answer-{{ question.id }}" aria-expanded="false" aria-controls="answer-{{ question.id }}">
+                        <h6 class="question-text">
+                            <i class="fas fa-question-circle me-2" style="color: #667eea;"></i>
+                            {{ question.Question }}
+                        </h6>
+
+                        <!-- Action Buttons -->
+                        <div class="btn-group-actions">
+                            <a href="{{ url_for('edit_question', question_id=question.id) }}" class="btn-action btn-edit-action" onclick="event.stopPropagation();" title="Edit Question">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn-action btn-delete-action" onclick="event.stopPropagation(); confirmDelete('{{ question.id }}', '{{ question.Question|truncate(30) }}')" title="Delete Question">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+
+                        <!-- Collapse Indicator -->
+                        <div class="collapse-indicator">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+
+                    <!-- Answer Content (Collapsible) -->
+                    <div class="collapse" id="answer-{{ question.id }}">
+                        <div class="answer-content">
+                            <strong><i class="fas fa-lightbulb me-1" style="color: #ffa500;"></i>Answer:</strong><br>
+                            {{ question.Answer }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-clipboard-question"></i>
+                    </div>
+                    <h4>No Questions Yet</h4>
+                    <p>Start building your study deck by adding some questions and answers. Create your first flashcard to begin your learning journey!</p>
+                    <a href="{{ url_for('add_question', chapter_id=chapter.id) }}" class="btn-modern btn-primary-modern btn-lg pulse-animation">
+                        <i class="fas fa-plus-circle"></i>
+                        Add Your First Question
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Enhanced Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirm Deletion
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <i class="fas fa-trash-alt text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="mb-2">Are you sure you want to delete the question</p>
+                    <p class="fw-bold text-danger">"<span id="questionText"></span>"?</p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Cancel
+                    </button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        <button type="submit" class="btn-modern btn-danger-modern">
+                            <i class="fas fa-trash-alt me-1"></i>
+                            Delete Forever
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    function confirmDelete(questionId, questionText) {
+        // Set the question text in the modal
+        document.getElementById('questionText').textContent = questionText;
+
+        // Set the form action URL for deletion
+        document.getElementById('deleteForm').action = "{{ url_for('delete_question', question_id=-1) }}".replace(-1, questionId);
+
+        // Show the modal with animation
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const collapseElements = document.querySelectorAll('[data-bs-toggle="collapse"]');
+
+        collapseElements.forEach(function(element) {
+            const targetId = element.getAttribute('data-bs-target');
+            const targetElement = document.querySelector(targetId);
+
+            targetElement.addEventListener('show.bs.collapse', function() {
+                element.classList.remove('collapsed');
+            });
+
+            targetElement.addEventListener('hide.bs.collapse', function() {
+                element.classList.add('collapsed');
+            });
+        });
+
+        // Add staggered animation to question cards
+        const questionCards = document.querySelectorAll('.question-card');
+        questionCards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+    });
+
+    // Add loading state for dynamic content
+    function showLoadingState() {
+        const container = document.querySelector('.questions-container');
+        if (container) {
+            container.classList.add('loading-shimmer');
+        }
+    }
+
+    function hideLoadingState() {
+        const container = document.querySelector('.questions-container');
+        if (container) {
+            container.classList.remove('loading-shimmer');
+        }
+    }
+</script>
+{% endblock %}

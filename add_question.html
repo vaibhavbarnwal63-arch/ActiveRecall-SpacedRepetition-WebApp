@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Question{% endblock %}
+
+{% block content %}
+    <div class="form-panel" style="max-width: 600px;"> <!-- Increased max-width for more space for questions/answers -->
+        <div class="form-header">
+            <h1><i class="fas fa-plus-circle"></i> Add Question</h1>
+        </div>
+        <div class="form-body">
+            <form method="POST" action="{{ url_for('add_question',chapter_id = chapter.id) }}">
+                {{ form.csrf_token }}
+                <div class="mb-4">
+                    {{ form.question.label(class="form-label") }}
+                    {{ form.question(class="form-control form-control-lg", rows="4", placeholder="e.g., What is the capital of France?") }}
+                </div>
+                <div class="mb-4">
+                    {{ form.answer.label(class="form-label") }}
+                    {{ form.answer(class="form-control form-control-lg", rows="4", placeholder="e.g., Paris") }}
+                </div>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn-modern btn-primary-modern btn-lg">
+                        <i class="fas fa-save me-2"></i> Save Question
+                    </button>
+                    <button type="button" onclick="history.back()" class="btn-modern btn-secondary-modern btn-lg">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subjects{% endblock %}
+
+{% block head_extra %}
+    <style>
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .subjects-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .subjects-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem;
+            border: none;
+            text-align: center;
+        }
+
+        .card-header h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .subject-item {
+            border: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-item:last-child {
+            border-bottom: none;
+        }
+
+        .subject-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            transform: translateX(5px);
+        }
+
+        .subject-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .subject-item:hover::before {
+            opacity: 1;
+        }
+
+        .subject-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .subject-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .subject-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--success-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253, 121, 168, 0.4);
+            color: white;
+        }
+
+        .add-subject-btn {
+            background: var(--success-gradient);
+            border: none;
+            border-radius: 50px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .add-subject-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .main-container {
+                padding: 1rem 0;
+            }
+
+            .subject-item {
+                padding: 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-graduation-cap"></i> My Subjects
+        </h1>
+        <p class="page-subtitle">Manage your learning journey</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            {% if sub_list %}
+                <div class="subjects-card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-book-open"></i> Your Subjects</h4>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for sub in sub_list %}
+                        <div class="list-group-item subject-item d-flex justify-content-between align-items-center">
+                            <a href="{{url_for('view_chapters',id = sub.id,subject_name = sub.Subs)}}" class="subject-link flex-grow-1">
+                                <h6 class="subject-name">
+                                    <div class="subject-icon">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                    {{ sub.Subs }}
+                                    {% if sub.has_due_questions %}
+                                        <span class="due-indicator">
+                                            <i class="fas fa-exclamation-circle"></i> Due!
+                                        </span>
+                                    {% endif %}
+                                </h6>
+                            </a>
+                            <div class="action-buttons">
+                                <a href="{{url_for('edit_subject', id=sub.id)}}" class="btn btn-modern btn-edit">
+                                    <i class="fas fa-edit"></i>
+                                </A>
+                                <button type="button" class="btn btn-modern btn-delete" onclick="confirmDelete('{{ sub.id }}', '{{ sub.Subs }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{{url_for('add_subject')}}" class="add-subject-btn pulse-animation">
+                        <i class="fas fa-plus"></i>
+                        Add More Subjects
+                    </a>
+                </div>
+            {% else %}
+                <div class="subjects-card">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3 class="empty-state-title">No Subjects Yet</h3>
+                        <p class="empty-state-text">Start your learning journey by adding your first subject!</p>
+                        <a href="{{url_for('add_subject')}}" class="add-subject-btn">
+                            <i class="fas fa-plus"></i>
+                            Add Your First Subject
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Enhanced Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger"> <!-- Changed to danger gradient -->
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-trash-alt text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="mb-2">Are you sure you want to delete</p>
+                    <p class="fw-bold text-danger">"<span id="subjectName"></span>"?</p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# ADDED CSRF TOKEN HERE #}
+                        <button type="submit" class="btn-modern btn-danger-modern">
+                            <i class="fas fa-trash-alt me-1"></i> Delete Forever
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    function confirmDelete(subId, subName) {
+        // Set the subject name in the modal
+        document.getElementById('subjectName').textContent = subName;
+
+        // Set the form action URL for deletion
+        document.getElementById('deleteForm').action = "{{ url_for('delete_subject', id=-32) }}".replace(-32, subId);
+
+        // Show the modal
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add staggered animation to subject items
+        const subjectItems = document.querySelectorAll('.subject-item');
+        subjectItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                item.style.transition = 'all 0.5s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}
